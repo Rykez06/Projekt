@@ -19,6 +19,8 @@ void moves(int coordinates[2], char tab[8][8], char Player);
 bool win(char tab[8][8]);
 
 int RoundCounter = 0;
+int Offer = 0;
+int draw = 0;
 
 int main() {
 	char board[8][8] = { {' ','O',' ','O',' ','O', ' ', 'O'},
@@ -30,12 +32,12 @@ int main() {
 						{' ','X',' ','X',' ','X', ' ', 'X'},
 						{'X',' ','X',' ','X',' ', 'X', ' '} };
 	//intro();
-	while (win(board)) {
-		gameplay(board, RoundCounter);
-		RoundCounter++;
-		system("cls");
-	}
-	return 0;
+		while (win(board)) {
+			gameplay(board, RoundCounter);
+			RoundCounter++;
+			system("cls");
+		}
+		return 0;
 }
 void intro() {
 	cout << "Witaj w grze w warcaby!" << endl;
@@ -72,6 +74,7 @@ void boardOut(char tab[8][8]) {
 }
 void gameplay(char tab[8][8], int counter) {
 	char Player;
+	int end;
 	if (counter % 2 == 0) {
 		Player = 'X';
 		cout << "\t    Tura gracza X\n" << endl;
@@ -80,10 +83,29 @@ void gameplay(char tab[8][8], int counter) {
 		Player = 'O';
 		cout << "\t    Tura gracza O\n" << endl;
 	}
-	boardOut(tab);
+	if (Offer > 0) {
+		cout << "akceptujesz remis\?\n0 - Nie\n1 - Tak" << endl;
+		cin >> draw;
+		if (draw == 1) {
+			return;
+		}
+		else if (draw == 0) {
+			Offer--;
+			return;
+		}
+		else {
+			RoundCounter--;
+			return;
+		}
+	}
+		boardOut(tab);
 	string coordinates;
-	cout << "Podaj koordynaty pionka, ktorym chcesz sie poruszyc: ";
+	cout << "Podaj koordynaty pionka, ktorym chcesz sie poruszyc lub zaproponuj remis wpisujac \"remis\": ";
 		cin >> coordinates;
+		if (coordinates == "remis") {
+			Offer++;
+			return;
+		}
 		while (!coordinatesChecker(coordinatesConverter(coordinates), tab, Player)) {
 			cout << "Podaj ponownie koordynaty: ";
 			cin >> coordinates;
@@ -109,8 +131,16 @@ bool coordinatesChecker(int coordinates[2], char tab[8][8], char Player) {
 	int x = coordinates[0], y = coordinates[1];
 	bool flag = false;
 	if (tab[y][x] != Player) {
-		cout << "Na tym polu nie ma twojego pionka.\n";
-		return false;
+			if (Player == 'X') {
+				if (tab[y][x] == '#') return true;
+			}
+			else if (Player == 'O') {
+				if (tab[y][x] == '@') return true;
+			}
+			else {
+				cout << "Na tym polu nie ma twojego pionka.\n";
+				return false;
+			}
 	}
 	if (Player == 'X') {
 		if (y - 1 >= 0 && x + 1 < 8) {
@@ -168,9 +198,9 @@ bool coordinatesChecker(int coordinates[2], char tab[8][8], char Player) {
 }
 void moves(int coordinates[2], char tab[8][8], char Player) {
 
-	int y = coordinates[1], x = coordinates[0], counter = 1, counterL = 0, counterP = 0, biciePX =0, bicieLX = 0, biciePO = 0, bicieLO = 0;
+	int y = coordinates[1], x = coordinates[0], counter = 1, counterL = 0, counterP = 0, biciePX = 0, bicieLX = 0, biciePO = 0, bicieLO = 0;
 	bool flag = false;
-	int moveX, moveY, moveX2, moveY2;
+	int moveX = -1, moveY = -1, moveX2 = -1, moveY2 = -1;
 	cout << "Wybierz opcje ruchu: \n";
 	if (Player == 'X') {
 		if (y - 1 >= 0 && x + 1 < 8) {
@@ -188,7 +218,7 @@ void moves(int coordinates[2], char tab[8][8], char Player) {
 				if (tab[y - 2][x + 2] == ' ' && (y - 2 >= 0 && x + 2 < 8)) {
 					x1 = x + 67;
 					y1 = y + 47;
-					cout << counter << ". mozliwosc ruchu w prawo na pole: " << x1  << y1  << endl;
+					cout << counter << ". mozliwosc ruchu w prawo na pole: " << x1 << y1 << endl;
 					moveX = x + 2;
 					moveY = y - 2;
 					counter++;
@@ -277,34 +307,33 @@ void moves(int coordinates[2], char tab[8][8], char Player) {
 
 	}
 	cout << counter << ". Wybierz inny pionek" << endl;
-	int move;
-	cin >> move;
-	while (move < 1 || move >counter) {
-		cout << "Nieprawidłowy ruch!\n" << "Podaj ponowanie: ";
-		cin >> move;
+	if (Player == 'X') {
+		if (moveY == 0 || moveY2 == 0) Player = '#';
 	}
-	
+
+	else if (Player == 'O') {
+		if (moveY == 7 || moveY2 == 7) Player = '@';
+	}
+	int move;
+	do {
+		cin >> move;
+		if (move < 1 || move >counter) cout << "Nieprawidlowy ruch!\n" << "Podaj ponowanie: ";
+	} while (move < 1 || move >counter);
 	if (move == counter) RoundCounter++;
 	else if ((move == 1 && counterL == counterP) || (move == 1 && counterL < counterP)) {
-			tab[y][x] = ' ';
-			tab[moveY][moveX] = Player;
-			if (biciePX > 0) {
-				tab[y-1][x+1] = ' ';
-			}
-			if (biciePO > 0) {
-				tab[y + 1][x + 1] = ' ';
-			}
+		tab[y][x] = ' ';
+		tab[moveY][moveX] = Player;
+		if (biciePX > 0) tab[y - 1][x + 1] = ' ';
+		if (biciePO > 0) tab[y + 1][x + 1] = ' ';
+
 
 	}
 	else {
 		tab[y][x] = ' ';
 		tab[moveY2][moveX2] = Player;
-		if (bicieLX > 0) {
-			tab[y - 1][x - 1] = ' ';
-		}
-		if (bicieLO > 0) {
-			tab[y + 1][x - 1] = ' ';
-		}
+		if (bicieLX > 0) tab[y - 1][x - 1] = ' ';
+		if (bicieLO > 0) tab[y + 1][x - 1] = ' ';
+
 	}
 }
 bool win(char tab[8][8]) {
@@ -375,6 +404,11 @@ bool win(char tab[8][8]) {
 	}
 	if (counterPX == counterLX && counterPX == krzyzyk) { 
 		cout << "Wygrywa kolko"<<endl;
+		return false;
+	}
+	if (draw == 1) {
+		cout << "Gra konczy sie remisem, gratulacje." << endl;
+		Offer--;
 		return false;
 	}
 	return true;
